@@ -10,8 +10,13 @@ import {
   ListToolsRequestSchema,
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js'
-
 import pg from 'pg'
+import {
+  TableSchema,
+} from './ts/types/query-result.js'
+import {
+  generateChunkText,
+} from './utils/chunk.js'
 
 const server = new Server({
   name: 'postgres',
@@ -73,8 +78,8 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
 
   const client = await pool.connect()
   try {
-    const result = await client.query(`
-      select t.table_name, t.column_name, t.data_type, f.foreign_table_name, f.foreign_column_name
+    const result = await client.query<TableSchema>(`
+      select t.table_name as "tableName", t.column_name as "columnName", t.data_type as "dataType", f.foreign_table_name as "foreignTableName", f.foreign_column_name as "foreignColumnName"
       from information_schema."columns" t 
       left join (
       SELECT
@@ -103,8 +108,8 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     return {
       contents: [{
         uri: request.params.uri,
-        mimeType: 'application/json',
-        text: JSON.stringify(result.rows, null, 2),
+        mimeType: 'text/plain',
+        text: generateChunkText(result.rows),
       }],
     }
   }
