@@ -23,16 +23,16 @@ export const generateChunkText = (schemas: TableSchema[]): string => {
     tableName,
     columns,
   ] of tableSchemaMap.entries()) {
-    chunkText += `Table Name: ${tableName}\n`
+    chunkText += `Node: ${tableName}, label: table, properties: {id: ${tableName}}\n`
     // TODO: Table comment
-    // chunkText += `Table description: ${tableName} 相關的資料。\n`
-    chunkText += `Columns:\n`
-
     columns.forEach((col) => {
       // TODO: Column comment
-      let colText = `- ${col.columnName} (${col.dataType})`
+      const columnNodeName = `${tableName}.${col.columnName}`
+      let colText = `Node: ${columnNodeName}, label: column, properties: {id: ${columnNodeName}, columnName: ${col.columnName}, columnType: ${col.dataType}, table: ${tableName}}\n`
+      colText += `Releation: ${columnNodeName} BELONGS_TO ${tableName}\n`
       if (col.foreignTableName && col.foreignColumnName) {
-        colText += `, Foreign Key: ${col.foreignTableName}.${col.foreignColumnName}`
+        const foreignNodeName = `${col.foreignTableName}.${col.foreignColumnName}`
+        colText += `Releation: ${columnNodeName} FOREIGN_KEY_TO ${foreignNodeName}\n`
       }
       chunkText += colText + '\n'
     })
